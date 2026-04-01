@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Daily Activity Tracker</title>
+  <style>
+    body{font-family:Arial;margin:24px}
+    button{padding:8px 12px;cursor:pointer}
+    #out{margin-top:12px;white-space:pre-line}
+  </style>
+</head>
+<body>
+
+<h2>Daily Activity Tracker (Data Real)</h2>
+
+<label>Aktivitas:</label>
+<input id="act" placeholder="contoh: belajar, olahraga, scroll" />
+
+<label> Durasi (menit):</label>
+<input id="min" type="number" min="1" placeholder="30" />
+
+<button id="add">Tambah</button>
+
+<p id="sum">Total: 0 menit (0 aktivitas)</p>
+<div id="out">Belum ada data.</div>
+
+<script>
+  let items = [];
+  const act = document.getElementById("act");
+  const min = document.getElementById("min");
+  const add = document.getElementById("add");
+  const sum = document.getElementById("sum");
+  const out = document.getElementById("out");
+
+  function render(){
+    let total = 0;
+    let text = "";
+    for (let i = 0; i < items.length; i++) {
+      total += items[i].m;
+      text += (i+1) + ". " + items[i].a + " — " + items[i].m + " menit\n";
+    }
+    sum.innerText = "Total: " + total + " menit (" + items.length + " aktivitas)";
+    out.innerText = items.length ? text : "Belum ada data.";
+  }
+
+  add.addEventListener("click", function(){
+    const a = act.value.trim();
+    const m = Number(min.value);
+    if (!a || !Number.isFinite(m) || m < 1) return;
+
+    items.push({ a: a, m: Math.round(m) });
+    act.value = "";
+    min.value = "";
+    act.focus();
+    render();
+  });
+
+  render();
+</script>
+
+</body>
+</html>
