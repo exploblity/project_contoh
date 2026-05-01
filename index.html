@@ -2,60 +2,98 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Daily Activity Tracker</title>
+  <title>Student Productivity Analyzer</title>
   <style>
-    body{font-family:Arial;margin:24px}
-    button{padding:8px 12px;cursor:pointer}
-    #out{margin-top:12px;white-space:pre-line}
+    body { font-family: Arial; margin: 24px; max-width: 700px; }
+    input, button { padding: 8px; margin: 4px; }
+    #list, #result {
+      border: 1px solid #ddd; padding: 10px; margin-top: 10px; white-space: pre-line;
+    }
   </style>
 </head>
 <body>
 
-<h2>Daily Activity Tracker (Data Real)</h2>
+<h2>Student Productivity Analyzer</h2>
+<p>Masukkan aktivitas harian untuk dianalisis oleh AI.</p>
 
-<label>Aktivitas:</label>
-<input id="act" placeholder="contoh: belajar, olahraga, scroll" />
+<input id="act" placeholder="contoh: belajar, game">
+<input id="min" type="number" placeholder="menit">
 
-<label> Durasi (menit):</label>
-<input id="min" type="number" min="1" placeholder="30" />
+<button onclick="tambah()">Tambah</button>
+<button onclick="analisis()">Analisis AI</button>
 
-<button id="add">Tambah</button>
+<p id="total">Total: 0 menit</p>
 
-<p id="sum">Total: 0 menit (0 aktivitas)</p>
-<div id="out">Belum ada data.</div>
+<h3>Aktivitas:</h3>
+<div id="list">Belum ada data</div>
+
+<h3>Analisis AI:</h3>
+<div id="result">Belum dianalisis</div>
 
 <script>
-  let items = [];
-  const act = document.getElementById("act");
-  const min = document.getElementById("min");
-  const add = document.getElementById("add");
-  const sum = document.getElementById("sum");
-  const out = document.getElementById("out");
+let data = [];
 
-  function render(){
-    let total = 0;
-    let text = "";
-    for (let i = 0; i < items.length; i++) {
-      total += items[i].m;
-      text += (i+1) + ". " + items[i].a + " — " + items[i].m + " menit\n";
-    }
-    sum.innerText = "Total: " + total + " menit (" + items.length + " aktivitas)";
-    out.innerText = items.length ? text : "Belum ada data.";
-  }
+function render() {
+  let total = 0;
+  let text = "";
 
-  add.addEventListener("click", function(){
-    const a = act.value.trim();
-    const m = Number(min.value);
-    if (!a || !Number.isFinite(m) || m < 1) return;
-
-    items.push({ a: a, m: Math.round(m) });
-    act.value = "";
-    min.value = "";
-    act.focus();
-    render();
+  data.forEach((d, i) => {
+    total += d.m;
+    text += (i+1) + ". " + d.a + " - " + d.m + " menit\n";
   });
 
+  document.getElementById("total").innerText =
+    "Total: " + total + " menit";
+
+  document.getElementById("list").innerText =
+    text || "Belum ada data";
+}
+
+function tambah() {
+  const a = document.getElementById("act").value;
+  const m = Number(document.getElementById("min").value);
+
+  if (!a || !m) return alert("Isi data dengan benar");
+
+  data.push({ a, m });
+
+  document.getElementById("act").value = "";
+  document.getElementById("min").value = "";
+
   render();
+}
+
+async function analisis() {
+  if (data.length === 0) return;
+
+  document.getElementById("result").innerText = "Menganalisis...";
+
+  const daftar = data.map((d, i) =>
+    (i+1) + ". " + d.a + " - " + d.m + " menit"
+  ).join("\n");
+
+  try {
+    const res = await fetch("https://activity-ai-backend.vercel.app/api/analyze", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        activities: daftar
+      })
+    });
+
+    const json = await res.json();
+
+    document.getElementById("result").innerText =
+      json.result || json.error;
+
+  } catch {
+    document.getElementById("result").innerText = "Gagal koneksi ke AI";
+  }
+}
+
+render();
 </script>
 
 </body>
